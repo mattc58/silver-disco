@@ -121,6 +121,7 @@ func TestProtocolNegotiation(t *testing.T) {
 	updatedProtocolVersion := session.ProtocolVersion
 	updatedClusterVersion := cluster.ProtocolVersion
 
+	t.Logf("Cassandra version %s", ENV_CASSANDRA_VERSION)
 	if ENV_CASSANDRA_VERSION >= "2.2" {
 		assert.Equal(t, updatedProtocolVersion, 4)
 		assert.Equal(t, updatedClusterVersion, 4)

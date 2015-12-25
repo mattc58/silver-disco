@@ -59,7 +59,11 @@ func NewCluster(options ...ClusterOption) (*Cluster, error) {
 }
 
 func (cluster *Cluster) Connect() (*Session, error) {
-	return nil, nil
+	session := Session{}
+	if err := session.connect(); err != nil {
+		return nil, err
+	}
+	return &session, nil
 }
 
 func (cluster *Cluster) Shutdown() error {

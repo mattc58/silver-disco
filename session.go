@@ -37,7 +37,8 @@ func (session *Session) connect() error {
 	}
 	log.Printf("Body length=%d", len(bodyBytes))
 
-	frame := Frame{Version: 0x04, Flags: 0x0, Stream: 0x01, Opcode: 0x01, Length: uint32(len(bodyBytes))}
+	frame := Frame{Version: 0x04, Flags: 0x0, Stream: 0x01,
+		Opcode: 0x01, Length: uint32(len(bodyBytes))}
 
 	conn, err := net.Dial("tcp", "127.0.0.1:9042")
 	if err != nil {
@@ -88,22 +89,15 @@ func (session *Session) connect() error {
 	log.Printf("response=%v", resp)
 	log.Printf("response length=%d", resp.Length)
 
-	b = make([]byte, resp.Length)
-	num, err = conn.Read(b)
-	if err != nil {
-		log.Printf("Error from read:%s", err)
-		return err
+	if resp.Length > 0 {
+		b = make([]byte, resp.Length)
+		num, err = conn.Read(b)
+		if err != nil {
+			log.Printf("Error from read:%s", err)
+			return err
+		}
+		log.Printf("Body got back:%d bytes, %s", num, b)
 	}
-	log.Printf("Body got back:%d bytes, %s", num, b)
-
-	// errorResponse := ErrorResponse{}
-	er := make([]byte, num)
-	err = binary.Read(bytes.NewReader(b), binary.BigEndian, &er)
-	if err != nil {
-		log.Printf("Error reading eror response:%s", err)
-		return err
-	}
-	log.Printf("error code=%x, message=%s", er[0:4], string(er[4:]))
 
 	err = conn.Close()
 	if err != nil {

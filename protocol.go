@@ -14,8 +14,6 @@ type Frame struct {
 	Length  uint32
 }
 
-type FrameBody []byte
-
 type String struct {
 	Length uint16
 	Bytes  []byte

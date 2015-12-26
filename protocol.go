@@ -6,12 +6,49 @@ import (
 	"log"
 )
 
-type Frame struct {
+type FrameHeader struct {
 	Version byte
 	Flags   byte
 	Stream  uint16
 	Opcode  byte
 	Length  uint32
+}
+
+type FrameBody []byte
+
+type Frame struct {
+	FrameHeader
+	FrameBody
+}
+
+func (f *Frame) MarshalBinary() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.BigEndian, f.FrameHeader)
+	if err != nil {
+		return nil, err
+	}
+	err = binary.Write(buf, binary.BigEndian, f.FrameBody)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func NewStartupFrame(version byte, flags byte, stream uint16, options ...StringPair) (*Frame, error) {
+	header := FrameHeader{Version: version, Flags: flags, Stream: stream, Opcode: 0x01}
+
+	body := StringMap{}
+	for _, option := range options {
+		body.AddStringPair(option)
+	}
+	bodyBytes, err := body.MarshalBinary()
+	if err != nil {
+		log.Printf("Could not serialize body to binary:%s", err)
+		return nil, err
+	}
+	header.Length = uint32(len(bodyBytes))
+
+	return &Frame{FrameHeader: header, FrameBody: bodyBytes}, nil
 }
 
 type String struct {
@@ -71,9 +108,4 @@ func (sm *StringMap) MarshalBinary() ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
-}
-
-func (sm *StringMap) UnmarshalBinary(data []byte) error {
-	log.Printf("In Unmarshal")
-	return nil
 }
